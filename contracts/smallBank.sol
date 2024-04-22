@@ -44,10 +44,8 @@ contract smallBank is ERC20("ABCBank", "ABCBank") {
     }
     //Lend
     function lend(uint256 amount) external {
-        require(
-            transferFrom(msg.sender, address(this), amount),
-            "Transfer Failed"
-        );
+        require(balanceOf(address(this))> amount,"Not enough balance to lend");
+        transfer(address(this), amount);
         uint interest = (amount * interestRate) / 100;
         lenders[lendingID] = lendingData(
             msg.sender,
@@ -61,6 +59,7 @@ contract smallBank is ERC20("ABCBank", "ABCBank") {
     //Borrow
     function borrow(uint amount) external {
         checkCollatoral();
+        _transfer(address(this), msg.sender, amount);
         uint interest = (amount * interestRate) / 100;
         borrowers[borrowingID] = borrowingData(
             msg.sender,
