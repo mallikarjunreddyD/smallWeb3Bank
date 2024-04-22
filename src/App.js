@@ -5,39 +5,69 @@ import SmallBank from "./ABIs/smallBank.json";
 
 function App() {
   const [page, setPage] = useState("");
-  const [lendAmount, setLendAmount] = useState(1);
-  const [borrowAmount, setBorrowAmount] = useState(1);
-  const [paybackAmount, setPaybackAmount] = useState(1);
+  const [lendAmount, setLendAmount] = useState(null);
+  const [borrowAmount, setBorrowAmount] = useState(null);
+  const [paybackAmount, setPaybackAmount] = useState(null);
   const [id, setID] = useState(0);
 
   const [provider, setProvider] = useState(null);
   const [account, setAccount] = useState(null);
+  const [balance, setBalance] = useState(null);
 
   const [smallBank, setSmallBank] = useState(null);
 
-  
-  const handleLend = () => {
-    // Call lend function
-    console.log("Lend function called", lendAmount);
-    alert("Lending success");
+  const [result, setResult] = useState(null);
+
+  const handleLend = async () => {
+    const signer = await provider.getSigner();
+    let transaction = await smallBank.connect(signer).lend(lendAmount);
+    let receipt = await transaction.wait();
+    setResult(
+      <div>
+        <div>Lending ID: {receipt.events[1].args[0].toNumber()}</div>
+        <div> Lender: {receipt.events[1].args[1]} </div>
+        <div> Maturity Amount: {receipt.events[1].args[2].toNumber()}</div>
+      </div>
+    );
   };
 
-  const handleBorrow = () => {
-    // Call borrow function
-    console.log("Borrow function called", borrowAmount);
-    alert("Borrowing success");
+  const handleBorrow = async () => {
+    const signer = await provider.getSigner();
+    let transaction = await smallBank.connect(signer).borrow(borrowAmount);
+    let receipt = await transaction.wait();
+    setResult(
+      <div>
+        <div>Borrowing ID: {receipt.events[1].args[0].toNumber()}</div>
+        <div> Borrower: {receipt.events[1].args[1]} </div>
+        <div> Payable Amount: {receipt.events[1].args[2].toNumber()}</div>
+      </div>
+    );
   };
 
-  const handleWithdraw = () => {
-    // Call withdraw function
-    console.log("Withdraw function called", id);
-    alert("Withdraw success");
+  const handleWithdraw = async () => {
+    const signer = await provider.getSigner();
+    let transaction = await smallBank.connect(signer).withDrawFD(id);
+    let receipt = await transaction.wait();
+    setResult(
+      <div>
+        <div>Lending ID: {receipt.events[1].args[0].toNumber()}</div>
+        <div> Payable Amount: {receipt.events[1].args[1].toNumber()}</div>
+      </div>
+    );
   };
 
-  const handlePayback = () => {
-    // Call payback function
-    console.log("Payback function called", id, paybackAmount);
-    alert("Payback success");
+  const handlePayback = async () => {
+    const signer = await provider.getSigner();
+    let transaction = await smallBank
+      .connect(signer)
+      .payback(id, paybackAmount);
+    let receipt = await transaction.wait();
+    setResult(
+      <div>
+        <div>Payback ID: {receipt.events[1].args[0].toNumber()}</div>
+        <div> Paid Amount: {receipt.events[1].args[1].toNumber()}</div>
+      </div>
+    );
   };
   async function loadBlockchainData() {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -131,7 +161,10 @@ function App() {
         <button onClick={() => setPage("withdraw")}>Withdraw</button>
         <button onClick={() => setPage("payback")}>Payback</button>
       </div>
+
+
       <div className="content">{renderPage()}</div>
+      <div>{result}</div>
     </div>
   );
 }
